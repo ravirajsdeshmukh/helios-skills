@@ -55,10 +55,8 @@ The production data is available for this organization:
   kernel, select the `python3` kernel of that environment
   (`/home/ubuntu/venv311/share/jupyter/kernels/python3`). Do not use `venv38` or
   the system Python, which has no `pandas`.
-- In `/opt/ai-helios`, write and delete only the `org_id=helios` partitions. The
-  folder can also hold the cluster's own hourly data under another `org_id`
-  (for example `org_id=29077a66-11ba-4e6d-b64f-9775df6517e7`). Never change,
-  delete or overwrite those partitions or the `_SUCCESS` files.
+- In `/opt/ai-helios`, write and delete only the `org_id=helios` partitions. Do not
+  put data from any other source in this folder.
 - If a step fails, stop and report the exact error. Do not try another source.
 
 ## Step 1: Check profiles and bucket access first
@@ -207,11 +205,8 @@ EOF
 - The writer replaces only the `org_id=helios` partitions, so it is safe to run again.
   It rebuilds the whole date range each time.
 - Output layout: `/opt/ai-helios/<dataset>/dt=YYYY-MM-DD/hr=HH/org_id=helios/`.
-- `/opt/ai-helios` can hold two Helios sources side by side: the converted data
-  (`org_id=helios`) and the cluster's data (another `org_id`). Readers must select
-  one `org_id`. `read_hourly` in `fec_model.py` does this. Notebook
-  `03_score_helios.ipynb` stops with "Expected one org_id" when it finds more than
-  one. Report this to the user when the folder holds both.
+  The folder holds only this converted data. Readers select the `org_id` with
+  `read_hourly` in `fec_model.py`.
 - Do not change `HeliosEtlConfig`. The defaults keep only 400G ports, set a delta
   across a collection gap longer than 900 s to zero, and need 90% of each hour's
   counter time. Blank optical columns, BER and CRC rates stay null.
@@ -249,7 +244,7 @@ warning, such as skipped days, a stale production copy or a schema difference.
 State these limits when they apply:
 
 - The conversion was tested for schema match. The values are not validated against
-  the cluster's own hourly data in `/opt/ai-helios` (the other `org_id`).
+  the Helios cluster's own hourly ETL output.
 - The Helios `rs` FEC mode is treated as `FEC119` later in training. This is an
   assumption.
 - The Helios links are idle (almost no traffic), so the data shows little error
